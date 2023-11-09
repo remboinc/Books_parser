@@ -25,7 +25,7 @@ def main():
     Path(books_path).mkdir(parents=True, exist_ok=True)
     url = "https://tululu.org/txt.php"
 
-    for ids in range(10):
+    for ids in range(1, 11):
         try:
             book_parser(ids, url, books_path)
             print("Скачиваю книгу")
