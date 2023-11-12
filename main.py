@@ -5,6 +5,7 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
 from requests import HTTPError
+import argparse
 
 
 def check_for_redirect(response):
@@ -35,15 +36,6 @@ def title_parser(response):
     return filename
 
 
-def genre_parser(response, filename):
-    soup = BeautifulSoup(response.text, 'lxml')
-    genres = soup.find('span', class_="d_book").find_all('a')
-    all_books_genres = []
-    for genre in genres:
-        all_books_genres.append(genre.text)
-    print(filename, '\n', all_books_genres)
-
-
 def download_image(response):
     folder = "image"
     soup = BeautifulSoup(response.text, 'lxml')
@@ -53,20 +45,6 @@ def download_image(response):
     filepath = os.path.join(folder, filename)
     with open(filepath, 'wb') as file:
         file.write(response.content)
-
-
-def download_comments(response, filename):
-    folder = "comments"
-    Path(folder).mkdir(parents=True, exist_ok=True)
-    soup = BeautifulSoup(response.text, 'lxml')
-    comments = soup.find_all('div', class_='texts')
-    all_comments_about_books = []
-    for comment in comments:
-        comment = comment.find('span', class_="black").text
-        all_comments_about_books.append(comment)
-    filepath = os.path.join(folder, f"{filename}.txt")
-    with open(filepath, 'w', encoding='utf-8') as file:
-        file.write('\n'.join(all_comments_about_books))
 
 
 def parse_book_page(response):
@@ -99,17 +77,19 @@ def parse_book_page(response):
 def main():
     folder = "books"
     txt_url = "https://tululu.org/txt.php"
+    parser = argparse.ArgumentParser(description='Программа парсит книги с сайта tululu.org')
+    parser.add_argument('--start_id', type=int, help='С какого id начать парсинг', default=1)
+    parser.add_argument('--end_id', type=int, help='На каком id закончить парсинг', default=10)
+    args = parser.parse_args()
 
-    for ids in range(1, 11):
+    for ids in range(args.start_id, args.end_id + 1):
         url = f'https://tululu.org/b{ids}'
         response = requests.get(url)
         response.raise_for_status()
         try:
             parse_book_page(response)
             filename = title_parser(response)
-            genre_parser(response, filename)
             download_image(response)
-            download_comments(response, filename)
             download_txt(txt_url, filename, folder, ids)
             print("Скачиваю книгу")
         except HTTPError:
