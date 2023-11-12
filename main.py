@@ -14,9 +14,9 @@ def check_for_redirect(response):
         pass
 
 
-def download_txt(url, filename, folder, ids):
+def download_txt(txt_url, filename, folder, ids):
     params = {"id": ids}
-    response = requests.get(url, params=params)
+    response = requests.get(txt_url, params=params)
     response.raise_for_status()
     check_for_redirect(response)
     normal_title = sanitize_filename(filename)
@@ -27,10 +27,7 @@ def download_txt(url, filename, folder, ids):
     return str(filepath)
 
 
-def title_parser(ids):
-    url = f'https://tululu.org/b{ids}'
-    response = requests.get(url)
-    response.raise_for_status()
+def title_parser(response):
     soup = BeautifulSoup(response.text, 'lxml')
     book = soup.find('div', id="content").find('h1').text
     title = book.split('::')[0].strip()
@@ -38,11 +35,8 @@ def title_parser(ids):
     return filename
 
 
-def download_image(ids):
+def download_image(response):
     folder = "image"
-    url = f'https://tululu.org/b{ids}'
-    response = requests.get(url)
-    response.raise_for_status()
     soup = BeautifulSoup(response.text, 'lxml')
     image_url = soup.find('div', class_='bookimage').find('a').find('img')['src']
     filename = os.path.basename(urlsplit(image_url, scheme='', allow_fragments=True)[2])
@@ -55,13 +49,16 @@ def download_image(ids):
 
 def main():
     folder = "books"
-    url = "https://tululu.org/txt.php"
+    txt_url = "https://tululu.org/txt.php"
 
     for ids in range(1, 11):
+        url = f'https://tululu.org/b{ids}'
+        response = requests.get(url)
+        response.raise_for_status()
         try:
-            filename = title_parser(ids)
-            download_image(ids)
-            download_txt(url, filename, folder, ids)
+            filename = title_parser(response)
+            download_image(response)
+            download_txt(txt_url, filename, folder, ids)
             print("Скачиваю книгу")
         except HTTPError:
             print("Не удалось скачать книгу -- редирект")
