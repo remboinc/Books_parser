@@ -69,6 +69,33 @@ def download_comments(response, filename):
         file.write('\n'.join(all_comments_about_books))
 
 
+def parse_book_page(response):
+    all_about_book = {}
+    soup = BeautifulSoup(response.text, 'lxml')
+
+    book = soup.find('div', id="content").find('h1').text
+    title = book.split('::')[0].strip()
+    author = book.split('::')[1].strip()
+    book_name = sanitize_filename(title)
+
+    all_books_genres = []
+    genres = soup.find('span', class_="d_book").find_all('a')
+    for genre in genres:
+        all_books_genres.append(genre.text)
+
+    comments = soup.find_all('div', class_='texts')
+    all_comments_about_books = []
+    for comment in comments:
+        comment = comment.find('span', class_="black").text
+        all_comments_about_books.append(comment)
+    all_about_book[book_name] = {
+        'Автор': author,
+        'Жанр книги': all_books_genres,
+        'Комментарии': all_comments_about_books
+    }
+    return all_about_book
+
+
 def main():
     folder = "books"
     txt_url = "https://tululu.org/txt.php"
@@ -78,6 +105,7 @@ def main():
         response = requests.get(url)
         response.raise_for_status()
         try:
+            parse_book_page(response)
             filename = title_parser(response)
             genre_parser(response, filename)
             download_image(response)
