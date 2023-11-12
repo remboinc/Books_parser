@@ -35,6 +35,15 @@ def title_parser(response):
     return filename
 
 
+def genre_parser(response, filename):
+    soup = BeautifulSoup(response.text, 'lxml')
+    genres = soup.find('span', class_="d_book").find_all('a')
+    all_books_genres = []
+    for genre in genres:
+        all_books_genres.append(genre.text)
+    print(filename, '\n', all_books_genres)
+
+
 def download_image(response):
     folder = "image"
     soup = BeautifulSoup(response.text, 'lxml')
@@ -70,6 +79,7 @@ def main():
         response.raise_for_status()
         try:
             filename = title_parser(response)
+            genre_parser(response, filename)
             download_image(response)
             download_comments(response, filename)
             download_txt(txt_url, filename, folder, ids)
