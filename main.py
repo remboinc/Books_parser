@@ -1,4 +1,5 @@
 import os
+from urllib.parse import urlsplit
 import requests
 from pathlib import Path
 from bs4 import BeautifulSoup
@@ -26,8 +27,8 @@ def download_txt(url, filename, folder, ids):
     return str(filepath)
 
 
-def filename_parser(ids):
-    url = f'https://tululu.org/b{ids}/'
+def title_parser(ids):
+    url = f'https://tululu.org/b{ids}'
     response = requests.get(url)
     response.raise_for_status()
     soup = BeautifulSoup(response.text, 'lxml')
@@ -37,19 +38,35 @@ def filename_parser(ids):
     return filename
 
 
+def download_image(ids):
+    folder = "image"
+    url = f'https://tululu.org/b{ids}'
+    response = requests.get(url)
+    response.raise_for_status()
+    soup = BeautifulSoup(response.text, 'lxml')
+    image_url = soup.find('div', class_='bookimage').find('a').find('img')['src']
+    filename = os.path.basename(urlsplit(image_url, scheme='', allow_fragments=True)[2])
+    Path(folder).mkdir(parents=True, exist_ok=True)
+    filepath = os.path.join(folder, filename)
+    with open(filepath, 'wb') as file:
+        file.write(response.content)
+    return image_url
+
+
 def main():
     folder = "books"
     url = "https://tululu.org/txt.php"
 
     for ids in range(1, 11):
         try:
-            filename = filename_parser(ids)
+            filename = title_parser(ids)
+            download_image(ids)
             download_txt(url, filename, folder, ids)
             print("Скачиваю книгу")
         except HTTPError:
             print("Не удалось скачать книгу -- редирект")
-        except AttributeError:
-            print("Такой книги не существует")
+        except AttributeError as e:
+            print(f'Такой книги не нашлось. Ошибка: {e}')
 
 
 if __name__ == '__main__':
