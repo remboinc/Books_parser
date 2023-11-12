@@ -44,7 +44,20 @@ def download_image(response):
     filepath = os.path.join(folder, filename)
     with open(filepath, 'wb') as file:
         file.write(response.content)
-    return image_url
+
+
+def download_comments(response, filename):
+    folder = "comments"
+    Path(folder).mkdir(parents=True, exist_ok=True)
+    soup = BeautifulSoup(response.text, 'lxml')
+    comments = soup.find_all('div', class_='texts')
+    all_comments_about_books = []
+    for comment in comments:
+        comment = comment.find('span', class_="black").text
+        all_comments_about_books.append(comment)
+    filepath = os.path.join(folder, f"{filename}.txt")
+    with open(filepath, 'w', encoding='utf-8') as file:
+        file.write('\n'.join(all_comments_about_books))
 
 
 def main():
@@ -58,6 +71,7 @@ def main():
         try:
             filename = title_parser(response)
             download_image(response)
+            download_comments(response, filename)
             download_txt(txt_url, filename, folder, ids)
             print("Скачиваю книгу")
         except HTTPError:
