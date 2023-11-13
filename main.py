@@ -13,14 +13,14 @@ def check_for_redirect(response):
         raise HTTPError('Redirect')
 
 
-def download_txt(txt_url, filename, folder, ids):
-    params = {"id": ids}
+def download_txt(txt_url, filename, folder, id_):
+    params = {"id": id_}
     response = requests.get(txt_url, params=params)
     response.raise_for_status()
     check_for_redirect(response)
     normal_title = sanitize_filename(filename)
     Path(folder).mkdir(parents=True, exist_ok=True)
-    filepath = os.path.join(folder, f"{ids}. {normal_title}.txt")
+    filepath = os.path.join(folder, f"{id_}. {normal_title}.txt")
     with open(filepath, 'wb') as file:
         file.write(response.content)
     return str(filepath)
@@ -80,15 +80,15 @@ def main():
     parser.add_argument('--end_id', type=int, help='На каком id закончить парсинг', default=10)
     args = parser.parse_args()
 
-    for ids in range(args.start_id, args.end_id + 1):
-        url = f'https://tululu.org/b{ids}'
+    for id_ in range(args.start_id, args.end_id + 1):
+        url = f'https://tululu.org/b{id_}'
         response = requests.get(url)
         response.raise_for_status()
         try:
             parse_book_page(response)
             filename = title_parser(response)
             download_image(response)
-            download_txt(txt_url, filename, folder, ids)
+            download_txt(txt_url, filename, folder, id_)
             print("Скачиваю книгу")
         except HTTPError:
             print("Не удалось скачать книгу -- редирект")
