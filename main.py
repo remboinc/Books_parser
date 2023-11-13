@@ -1,4 +1,5 @@
 import os
+import time
 from urllib.parse import urlsplit
 import requests
 from pathlib import Path
@@ -82,16 +83,20 @@ def main():
 
     for id_ in range(args.start_id, args.end_id + 1):
         url = f'https://tululu.org/b{id_}'
-        response = requests.get(url)
-        response.raise_for_status()
+
         try:
+            response = requests.get(url)
+            response.raise_for_status()
             parse_book_page(response)
             filename = title_parser(response)
             download_image(response)
             download_txt(txt_url, filename, folder, id_)
-            print("Скачиваю книгу")
-        except HTTPError:
-            print("Не удалось скачать книгу -- редирект")
+            print("Книга скачана")
+        except requests.exceptions.ConnectionError:
+            print('Не удалось отправить запрос, проверьте соединение с интернетом')
+            time.sleep(60)
+        except HTTPError as e:
+            print(f"Не удалось скачать книгу. Ошибка: {e}")
         except AttributeError as e:
             print(f'Такой книги не нашлось. Ошибка: {e}')
 
