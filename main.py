@@ -11,8 +11,6 @@ import argparse
 def check_for_redirect(response):
     if response.history:
         raise HTTPError('Redirect')
-    else:
-        pass
 
 
 def download_txt(txt_url, filename, folder, ids):
