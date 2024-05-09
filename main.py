@@ -45,14 +45,17 @@ def download_txt(txt_url, filename, folder, id_):
     return str(filepath)
 
 
-def download_image(response, image_url):
+def download_image(image_url):
     folder = "image"
     try:
-        filename = os.path.basename(urlsplit(image_url, scheme='', allow_fragments=True)[2])
-        Path(folder).mkdir(parents=True, exist_ok=True)
-        filepath = os.path.join(folder, filename)
-        with open(filepath, 'wb') as file:
-            file.write(response.content)
+        if image_url:
+            filename = os.path.basename(urlsplit(image_url, scheme='', allow_fragments=True)[2])
+            Path(folder).mkdir(parents=True, exist_ok=True)
+            filepath = os.path.join(folder, filename)
+            image = requests.get(image_url).content
+            with open(filepath, 'wb') as file:
+                file.write(image)
+                print(f"Изображение скачано: {filepath}")
     except BookNotFoundError as e:
         print(e)
 
@@ -85,21 +88,23 @@ def parse_book_page(response):
 
 def main():
     folder = "books"
-    txt_url = "https://tululu.org/txt.php"
+    site_url = 'https://tululu.org/{}'
+    txt_url = site_url.format('txt.php')
     parser = argparse.ArgumentParser(description='Программа парсит книги с сайта tululu.org')
     parser.add_argument('--start_id', type=int, help='С какого id начать парсинг', default=1)
     parser.add_argument('--end_id', type=int, help='На каком id закончить парсинг', default=10)
     args = parser.parse_args()
 
     for id_ in range(args.start_id, args.end_id + 1):
-        url = f'https://tululu.org/b{id_}'
+        url = site_url.format(f'b{id_}/')
 
         try:
             response = requests.get(url)
             response.raise_for_status()
             book_info = parse_book_page(response)
             if book_info:
-                download_image(response, book_info['URL изображения'])
+                image_url = site_url.format(book_info['URL изображения'])
+                download_image(image_url)
                 download_txt(txt_url, book_info['Название книги'], folder, id_)
                 print("Книга скачана")
         except requests.exceptions.ConnectionError:
