@@ -85,30 +85,28 @@ def parse_book_page(response):
         if book_content is None:
             raise BookNotFoundError
         else:
-            book = book_content.find('h1').text
-            title = book.split('::')[0].strip()
-            author = book.split('::')[1].strip()
-            book_name = sanitize_filename(title)
-            all_books_genres = []
-            genres = soup.find('span', class_="d_book").find_all('a')
-            for genre in genres:
-                all_books_genres.append(genre.text)
+            h1 = book_content.find('h1').text
+            title = h1.split('::')[0].strip()
+            author = h1.split('::')[1].strip()
+            book = sanitize_filename(title)
+            genres = []
+            genres_tags = soup.find('span', class_="d_book").find_all('a')
+            for genre_tag in genres_tags:
+                genres.append(genre_tag.text)
 
-            comments = soup.find_all('div', class_='texts')
-            all_comments_about_books = []
-            for comment in comments:
-                comment = comment.find('span', class_="black").text
-                all_comments_about_books.append(comment)
+            comments = []
+            comments_blocks = soup.find_all('div', class_='texts')
+            for block in comments_blocks:
+                comment_text = block.find('span', class_="black").text
+                comments.append(comment_text)
             return {
-                'Название книги': book_name,
+                'Название книги': book,
                 'Автор': author,
-                'Жанр книги': all_books_genres,
-                'Комментарии': all_comments_about_books
+                'Жанр книги': genres,
+                'Комментарии': comments
             }
     except BookNotFoundError as e:
         print(e)
-
-
 
 
 def main():
