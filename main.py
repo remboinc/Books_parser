@@ -45,20 +45,14 @@ def download_txt(txt_url, filename, folder, id_):
     return str(filepath)
 
 
-def download_image(response):
+def download_image(response, image_url):
     folder = "image"
-    soup = BeautifulSoup(response.text, 'lxml')
     try:
-        book_image = soup.find('div', class_='bookimage')
-        if book_image is None:
-            pass
-        else:
-            image_url = book_image.find('a').find('img')['src']
-            filename = os.path.basename(urlsplit(image_url, scheme='', allow_fragments=True)[2])
-            Path(folder).mkdir(parents=True, exist_ok=True)
-            filepath = os.path.join(folder, filename)
-            with open(filepath, 'wb') as file:
-                file.write(response.content)
+        filename = os.path.basename(urlsplit(image_url, scheme='', allow_fragments=True)[2])
+        Path(folder).mkdir(parents=True, exist_ok=True)
+        filepath = os.path.join(folder, filename)
+        with open(filepath, 'wb') as file:
+            file.write(response.content)
     except BookNotFoundError as e:
         print(e)
 
@@ -67,21 +61,24 @@ def parse_book_page(response):
     soup = BeautifulSoup(response.text, 'lxml')
     try:
         book_content = soup.find('div', id="content")
-        if book_content is None:
-            raise BookNotFoundError
-        else:
+        book_image = soup.find('div', class_='bookimage')
+        if book_content:
             h1 = book_content.find('h1').text
             title = h1.split('::')[0].strip()
             author = h1.split('::')[1].strip()
             book = sanitize_filename(title)
             genres = [genre.text for genre in soup.find('span', class_="d_book").find_all('a')]
             comments = [block.find('span', class_="black").text for block in soup.find_all('div', class_='texts')]
+            image_url = book_image.find('a').find('img')['src']
             return {
                 'Название книги': book,
                 'Автор': author,
                 'Жанр книги': genres,
-                'Комментарии': comments
+                'Комментарии': comments,
+                'URL изображения': image_url,
             }
+        else:
+            raise BookNotFoundError
     except BookNotFoundError as e:
         print(e)
 
@@ -102,7 +99,7 @@ def main():
             response.raise_for_status()
             book_info = parse_book_page(response)
             if book_info:
-                download_image(response)
+                download_image(response, book_info['URL изображения'])
                 download_txt(txt_url, book_info['Название книги'], folder, id_)
                 print("Книга скачана")
         except requests.exceptions.ConnectionError:
