@@ -79,7 +79,6 @@ def download_image(response):
 
 
 def parse_book_page(response):
-    all_about_book = {}
     soup = BeautifulSoup(response.text, 'lxml')
     try:
         book_content = soup.find('div', id="content")
@@ -100,7 +99,8 @@ def parse_book_page(response):
             for comment in comments:
                 comment = comment.find('span', class_="black").text
                 all_comments_about_books.append(comment)
-            all_about_book[book_name] = {
+            return {
+                'Название книги': book_name,
                 'Автор': author,
                 'Жанр книги': all_books_genres,
                 'Комментарии': all_comments_about_books
@@ -108,7 +108,7 @@ def parse_book_page(response):
     except BookNotFoundError as e:
         print(e)
 
-    return all_about_book
+
 
 
 def main():
