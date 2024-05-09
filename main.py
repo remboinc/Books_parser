@@ -42,7 +42,7 @@ def download_txt(txt_url, filename, folder, id_):
     filepath = os.path.join(folder, f"{id_}. {normal_title}.txt")
     with open(filepath, 'wb') as file:
         file.write(response.content)
-    return str(filepath)
+    return filepath
 
 
 def download_image(image_url):
