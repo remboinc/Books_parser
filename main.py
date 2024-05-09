@@ -89,16 +89,8 @@ def parse_book_page(response):
             title = h1.split('::')[0].strip()
             author = h1.split('::')[1].strip()
             book = sanitize_filename(title)
-            genres = []
-            genres_tags = soup.find('span', class_="d_book").find_all('a')
-            for genre_tag in genres_tags:
-                genres.append(genre_tag.text)
-
-            comments = []
-            comments_blocks = soup.find_all('div', class_='texts')
-            for block in comments_blocks:
-                comment_text = block.find('span', class_="black").text
-                comments.append(comment_text)
+            genres = [genre.text for genre in soup.find('span', class_="d_book").find_all('a')]
+            comments = [block.find('span', class_="black").text for block in soup.find_all('div', class_='texts')]
             return {
                 'Название книги': book,
                 'Автор': author,
