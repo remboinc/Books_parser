@@ -7,24 +7,22 @@ from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
 from requests import HTTPError
 import argparse
+from tqdm import tqdm
 
 
 class BookNotFoundError(Exception):
     def __init__(self, message="Книга не найдена"):
-        self.message = message
-        super().__init__(self.message)
+        super().__init__(message)
 
 
 class DownloadError(Exception):
     def __init__(self, message="Ошибка загрузки"):
-        self.message = message
-        super().__init__(self.message)
+        super().__init__(message)
 
 
 class Redirect(HTTPError):
     def __init__(self, message="Редирект"):
-        self.message = message
-        super().__init__(self.message)
+        super().__init__(message)
 
 
 def check_for_redirect(response):
@@ -55,9 +53,8 @@ def download_image(image_url):
             image = requests.get(image_url).content
             with open(filepath, 'wb') as file:
                 file.write(image)
-                print(f"Изображение скачано: {filepath}")
-    except BookNotFoundError as e:
-        print(e)
+    except BookNotFoundError:
+        raise
 
 
 def parse_book_page(response):
@@ -82,8 +79,8 @@ def parse_book_page(response):
             }
         else:
             raise BookNotFoundError
-    except BookNotFoundError as e:
-        print(e)
+    except BookNotFoundError:
+        raise
 
 
 def main():
@@ -95,30 +92,34 @@ def main():
     parser.add_argument('--end_id', type=int, help='На каком id закончить парсинг', default=10)
     args = parser.parse_args()
 
-    for id_ in range(args.start_id, args.end_id + 1):
-        url = site_url.format(f'b{id_}/')
+    total = args.end_id - args.start_id + 1
+    with tqdm(total=total) as pbar:
+        for id_ in range(total):
+            pbar.update(1)
 
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
-            book_info = parse_book_page(response)
-            if book_info:
-                image_url = site_url.format(book_info['URL изображения'])
-                download_image(image_url)
-                download_txt(txt_url, book_info['Название книги'], folder, id_)
-                print("Книга скачана")
-        except requests.exceptions.ConnectionError:
-            print('Не удалось отправить запрос, проверьте соединение с интернетом')
-            time.sleep(60)
-        except DownloadError as e:
-            print(f"Не удалось скачать книгу. Ошибка: {e}")
-            continue
-        except BookNotFoundError as e:
-            print(f'Такой книги не нашлось. Ошибка: {e}')
-            continue
-        except Redirect as e:
-            print(e)
-            continue
+            url = site_url.format(f'b{id_}/')
+
+            try:
+                response = requests.get(url)
+                response.raise_for_status()
+                book_info = parse_book_page(response)
+                if book_info:
+                    image_url = site_url.format(book_info['URL изображения'])
+                    download_image(image_url)
+                    download_txt(txt_url, book_info['Название книги'], folder, id_)
+
+            except requests.exceptions.ConnectionError:
+                pbar.set_description('Не удалось отправить запрос, проверьте соединение с интернетом')
+                time.sleep(60)
+            except DownloadError as e:
+                pbar.set_description(f"Не удалось скачать книгу. Ошибка: {e}")
+                continue
+            except BookNotFoundError as e:
+                pbar.set_description(f'Такой книги не нашлось. Ошибка: {e}')
+                continue
+            except Redirect as e:
+                pbar.set_description(f'Ошибка редиректа: {e}')
+                continue
 
 
 if __name__ == '__main__':
