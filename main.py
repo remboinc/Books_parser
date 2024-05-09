@@ -45,21 +45,6 @@ def download_txt(txt_url, filename, folder, id_):
     return str(filepath)
 
 
-def title_parser(response):
-    try:
-        soup = BeautifulSoup(response.text, 'lxml')
-        book_content = soup.find('div', id="content")
-        if book_content is None:
-            raise BookNotFoundError
-        else:
-            book = book_content.find('h1').text
-            title = book.split('::')[0].strip()
-            filename = sanitize_filename(title)
-            return filename
-    except BookNotFoundError as e:
-        print(e)
-
-
 def download_image(response):
     folder = "image"
     soup = BeautifulSoup(response.text, 'lxml')
@@ -115,10 +100,11 @@ def main():
         try:
             response = requests.get(url)
             response.raise_for_status()
-            filename = title_parser(response)
-            download_image(response)
-            download_txt(txt_url, filename, folder, id_)
-            print("Книга скачана")
+            book_info = parse_book_page(response)
+            if book_info:
+                download_image(response)
+                download_txt(txt_url, book_info['Название книги'], folder, id_)
+                print("Книга скачана")
         except requests.exceptions.ConnectionError:
             print('Не удалось отправить запрос, проверьте соединение с интернетом')
             time.sleep(60)
