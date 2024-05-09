@@ -153,4 +153,4 @@ cython_debug/
 
 # books and images
 books/
-images/
+image/

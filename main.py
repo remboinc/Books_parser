@@ -125,7 +125,6 @@ def main():
         try:
             response = requests.get(url)
             response.raise_for_status()
-            parse_book_page(response)
             filename = title_parser(response)
             download_image(response)
             download_txt(txt_url, filename, folder, id_)
