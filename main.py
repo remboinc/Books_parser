@@ -1,13 +1,14 @@
 import os
-import time
+import argparse
 from urllib.parse import urlsplit
+
 import requests
-from pathlib import Path
 from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
 from requests import HTTPError
-import argparse
 from tqdm import tqdm
+from pathlib import Path
+import time
 
 
 class BookNotFoundError(Exception):
