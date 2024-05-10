@@ -105,11 +105,11 @@ def main():
             try:
                 response = requests.get(url)
                 response.raise_for_status()
-                book_info = parse_book_page(response)
-                if book_info:
-                    image_url = site_url.format(book_info['URL изображения'])
+                book = parse_book_page(response)
+                if book:
+                    image_url = site_url.format(book['URL изображения'])
                     download_image(image_url)
-                    download_txt(txt_url, book_info['Название книги'], folder, id_)
+                    download_txt(txt_url, book['Название книги'], folder, id_)
 
             except requests.exceptions.ConnectionError:
                 pbar.set_description('Не удалось отправить запрос, проверьте соединение с интернетом')
