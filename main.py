@@ -48,8 +48,6 @@ def download_txt(txt_url, filename, folder, id_):
 
 def download_image(image_url):
     folder = "image"
-    if not image_url:
-        return
     filename = os.path.basename(urlsplit(image_url, scheme='', allow_fragments=True)[2])
     Path(folder).mkdir(parents=True, exist_ok=True)
     filepath = os.path.join(folder, filename)
