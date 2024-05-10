@@ -51,7 +51,9 @@ def download_image(image_url):
     filename = os.path.basename(urlsplit(image_url, scheme='', allow_fragments=True)[2])
     Path(folder).mkdir(parents=True, exist_ok=True)
     filepath = os.path.join(folder, filename)
-    image = requests.get(image_url).content
+    response = (requests.get(image_url))
+    response.raise_for_status()
+    image = response.content
     with open(filepath, 'wb') as file:
         file.write(image)
 
@@ -105,14 +107,16 @@ def main():
             except requests.exceptions.ConnectionError:
                 pbar.set_description('Не удалось отправить запрос, проверьте соединение с интернетом')
                 time.sleep(60)
+            except Redirect as e:
+                pbar.set_description(f'Ошибка редиректа: {e}')
+                continue
+            except requests.exceptions.HTTPError as e:
+                pbar.set_description(f'Ошибка отправки запроса: {e}')
             except DownloadError as e:
                 pbar.set_description(f"Не удалось скачать книгу. Ошибка: {e}")
                 continue
             except BookNotFoundError as e:
                 pbar.set_description(f'Такой книги не нашлось. Ошибка: {e}')
-                continue
-            except Redirect as e:
-                pbar.set_description(f'Ошибка редиректа: {e}')
                 continue
 
 
