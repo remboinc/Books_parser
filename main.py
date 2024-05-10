@@ -66,13 +66,13 @@ def parse_book_page(response):
     h1 = book_content.find('h1').text
     title = h1.split('::')[0].strip()
     author = h1.split('::')[1].strip()
-    book = sanitize_filename(title)
+    book_title = sanitize_filename(title)
     genres = [genre.text for genre in soup.find('span', class_="d_book").find_all('a')]
     comments = [block.find('span', class_="black").text for block in soup.find_all('div', class_='texts')]
     book_image = soup.find('div', class_='bookimage')
     image_url = book_image.find('a').find('img')['src']
     return {
-        'Название книги': book,
+        'Название книги': book_title,
         'Автор': author,
         'Жанр книги': genres,
         'Комментарии': comments,
