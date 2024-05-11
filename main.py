@@ -21,18 +21,18 @@ class Redirect(HTTPError):
         super().__init__(message)
 
 
-def check_for_redirect(response):
-    if response.history and response.url == 'https://tululu.org/':
+def check_for_redirect(response, site_url):
+    if response.history and response.url == site_url:
         last_redirect = response.history[-1]
         if last_redirect.is_redirect:
             raise Redirect(f"{last_redirect.status_code} {last_redirect.reason}")
 
 
-def download_txt(txt_url, filename, folder, id_):
+def download_txt(txt_url, filename, folder, id_, site_url):
     params = {"id": id_}
     response = requests.get(txt_url, params=params)
     response.raise_for_status()
-    check_for_redirect(response)
+    check_for_redirect(response, site_url)
     normal_title = sanitize_filename(filename)
     Path(folder).mkdir(parents=True, exist_ok=True)
     filepath = os.path.join(folder, f"{id_}. {normal_title}.txt")
@@ -94,11 +94,11 @@ def main():
             try:
                 response = requests.get(url)
                 response.raise_for_status()
-                check_for_redirect(response)
+                check_for_redirect(response, site_url)
                 book = parse_book_page(response)
-                image_url = urljoin(site_url, book['Image url'])
+                image_url = urljoin(url, book['Image url'])
                 download_image(image_url)
-                download_txt(txt_url, book['Book title'], folder, id_)
+                download_txt(txt_url, book['Book title'], folder, id_, site_url)
 
             except requests.exceptions.ConnectionError:
                 pbar.set_description('Не удалось отправить запрос, проверьте соединение с интернетом')
