@@ -67,11 +67,11 @@ def parse_book_page(response):
     book_image = soup.find('div', class_='bookimage')
     image_url = book_image.find('a').find('img')['src']
     return {
-        'Название книги': book_title,
-        'Автор': author,
-        'Жанр книги': genres,
-        'Комментарии': comments,
-        'URL изображения': image_url,
+        'Book title': book_title,
+        'Author': author,
+        'Genre': genres,
+        'Comments': comments,
+        'Image url': image_url,
     }
 
 
@@ -96,9 +96,9 @@ def main():
                 response.raise_for_status()
                 check_for_redirect(response)
                 book = parse_book_page(response)
-                image_url = urljoin(site_url, book['URL изображения'])
+                image_url = urljoin(site_url, book['Image url'])
                 download_image(image_url)
-                download_txt(txt_url, book['Название книги'], folder, id_)
+                download_txt(txt_url, book['Book title'], folder, id_)
 
             except requests.exceptions.ConnectionError:
                 pbar.set_description('Не удалось отправить запрос, проверьте соединение с интернетом')
