@@ -22,7 +22,7 @@ class Redirect(HTTPError):
 
 
 def check_for_redirect(response):
-    if response.history:
+    if response.history and response.url == 'https://tululu.org/':
         last_redirect = response.history[-1]
         if last_redirect.is_redirect:
             raise Redirect(f"{last_redirect.status_code} {last_redirect.reason}")
@@ -94,6 +94,7 @@ def main():
             try:
                 response = requests.get(url)
                 response.raise_for_status()
+                check_for_redirect(response)
                 book = parse_book_page(response)
                 image_url = urljoin(site_url, book['URL изображения'])
                 download_image(image_url)
