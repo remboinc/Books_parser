@@ -46,7 +46,7 @@ def download_image(image_url):
     filename = os.path.basename(urlsplit(image_url, scheme='', allow_fragments=True)[2])
     Path(folder).mkdir(parents=True, exist_ok=True)
     filepath = os.path.join(folder, filename)
-    response = (requests.get(image_url))
+    response = requests.get(image_url)
     response.raise_for_status()
     image = response.content
     with open(filepath, 'wb') as file:
