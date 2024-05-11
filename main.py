@@ -16,11 +16,6 @@ class BookNotFoundError(Exception):
         super().__init__(message)
 
 
-class DownloadError(Exception):
-    def __init__(self, message="Ошибка загрузки"):
-        super().__init__(message)
-
-
 class Redirect(HTTPError):
     def __init__(self, message="Редирект"):
         super().__init__(message)
@@ -112,9 +107,6 @@ def main():
                 continue
             except requests.exceptions.HTTPError as e:
                 pbar.set_description(f'Ошибка отправки запроса: {e}')
-            except DownloadError as e:
-                pbar.set_description(f"Не удалось скачать книгу. Ошибка: {e}")
-                continue
             except BookNotFoundError as e:
                 pbar.set_description(f'Такой книги не нашлось. Ошибка: {e}')
                 continue
