@@ -23,9 +23,7 @@ class Redirect(HTTPError):
 
 def check_for_redirect(response, site_url):
     if response.history and response.url == site_url:
-        last_redirect = response.history[-1]
-        if last_redirect.is_redirect:
-            raise Redirect(f"{last_redirect.status_code} {last_redirect.reason}")
+        raise Redirect
 
 
 def download_txt(txt_url, filename, folder, id_, site_url):
