@@ -21,16 +21,16 @@ class Redirect(HTTPError):
         super().__init__(message)
 
 
-def check_for_redirect(response, site_url):
-    if response.history and response.url == site_url:
+def check_for_redirect(response):
+    if response.history:
         raise Redirect
 
 
-def download_txt(txt_url, filename, folder, id_, site_url):
+def download_txt(txt_url, filename, folder, id_):
     params = {"id": id_}
     response = requests.get(txt_url, params=params)
     response.raise_for_status()
-    check_for_redirect(response, site_url)
+    check_for_redirect(response)
     normal_title = sanitize_filename(filename)
     Path(folder).mkdir(parents=True, exist_ok=True)
     filepath = os.path.join(folder, f"{id_}. {normal_title}.txt")
@@ -65,11 +65,11 @@ def parse_book_page(response):
     book_image = soup.find('div', class_='bookimage')
     image_url = book_image.find('a').find('img')['src']
     return {
-        'Book title': book_title,
-        'Author': author,
-        'Genre': genres,
-        'Comments': comments,
-        'Image url': image_url,
+        'book_title': book_title,
+        'author': author,
+        'genre': genres,
+        'comments': comments,
+        'image_url': image_url,
     }
 
 
@@ -92,11 +92,11 @@ def main():
             try:
                 response = requests.get(url)
                 response.raise_for_status()
-                check_for_redirect(response, site_url)
+                check_for_redirect(response)
                 book = parse_book_page(response)
-                image_url = urljoin(url, book['Image url'])
+                image_url = urljoin(url, book['image_url'])
                 download_image(image_url)
-                download_txt(txt_url, book['Book title'], folder, id_, site_url)
+                download_txt(txt_url, book['book_title'], folder, id_)
 
             except requests.exceptions.ConnectionError:
                 pbar.set_description('Не удалось отправить запрос, проверьте соединение с интернетом')
